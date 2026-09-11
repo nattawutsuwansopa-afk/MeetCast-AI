@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 460">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#133d86"/><stop offset=".55" stop-color="#287fd6"/><stop offset="1" stop-color="#3d2494"/></linearGradient><linearGradient id="skin" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f5c7a5"/><stop offset="1" stop-color="#d99d79"/></linearGradient></defs>
+<rect width="700" height="460" fill="url(#bg)"/><g opacity=".2" fill="#8eeaff"><rect x="35" y="55" width="150" height="92" rx="12"/><rect x="510" y="72" width="140" height="86" rx="12"/><rect x="45" y="200" width="110" height="70" rx="10"/><rect x="545" y="206" width="105" height="70" rx="10"/></g>
+<circle cx="350" cy="165" r="92" fill="url(#skin)"/><path d="M265 150q8-94 87-98 83 4 90 101-25-31-54-37-54 18-123 34z" fill="#202a3b"/><ellipse cx="317" cy="169" rx="8" ry="6" fill="#1c2532"/><ellipse cx="385" cy="169" rx="8" ry="6" fill="#1c2532"/><path d="M326 207q25 22 50 0" fill="none" stroke="#934d4f" stroke-width="6" stroke-linecap="round"/>
+<path d="M213 460q8-181 137-184 130 4 138 184z" fill="#152c55"/><path d="M303 277l47 62 49-62 39 183H262z" fill="#f5f7fb"/><path d="M350 336l-20 124h40z" fill="#2469d7"/><path d="M350 335l-19-37h38z" fill="#244475"/>
+<rect x="504" y="26" width="142" height="48" rx="11" fill="#ff3b79"/><text x="575" y="58" text-anchor="middle" font-family="Segoe UI,Arial" font-size="26" font-weight="700" fill="white">ON AIR</text>
+</svg>

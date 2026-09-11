@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MeetCast AI</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" aria-hidden="true">
+    <div class="brand"><div class="brand-mark">▶</div><div><strong>MeetCast AI</strong><small>AI for Smarter Meetings</small></div><button id="closeSidebarBtn" class="sidebar-close" aria-label="ปิดเมนู">✕</button></div>
+    <nav>
+      <button class="nav active" data-view="meeting"><span>🏠</span> ห้องประชุม</button>
+      <button class="nav" data-view="join"><span>🔗</span> เข้าร่วมประชุม</button>
+      <button class="nav" data-view="library"><span>📄</span> คลังสไลด์</button>
+      <button class="nav" data-view="summary"><span>🧾</span> สรุปประชุม</button>
+      <button class="nav" data-view="settings"><span>⚙️</span> ตั้งค่า</button>
+    </nav>
+    <div class="sidebar-spacer"></div>
+    <div class="offline-card"><b>🔒 Local & Private</b><p>ไฟล์และเสียงประชุมเก็บในเครื่องของคุณ</p></div>
+    <button class="quit-btn" id="quitBtn">ปิด MeetCast AI</button>
+  </aside>
+  <div id="sidebarOverlay" class="sidebar-overlay" aria-hidden="true"></div>
+
+  <main>
+    <header class="topbar">
+      <div class="top-left">
+        <button id="menuBtn" class="menu-btn" aria-label="เปิดเมนู" aria-expanded="false">☰</button>
+        <div class="search">⌕ <input placeholder="ค้นหาการประชุม สไลด์ หรือไฟล์..."></div>
+      </div>
+      <div class="top-right"><button id="topSettingsBtn" class="top-settings-btn">⚙️ ตั้งค่า</button><span class="ready-dot"></span> พร้อมใช้งาน <div class="profile">S</div></div>
+    </header>
+
+    <section id="view-meeting" class="view active-view">
+      <div class="page-heading meeting-heading">
+        <div class="meeting-heading-title">
+          <div class="meeting-heading-icon">👥</div>
+          <div>
+            <h1>ห้องประชุมอัจฉริยะ</h1>
+            <p>แสดงสไลด์ประกอบการประชุม พร้อม AI ผู้ช่วยประชุม</p>
+          </div>
+        </div>
+        <div class="heading-actions">
+          <select id="languageMode">
+            <option value="auto">🌐 ภาษาอัตโนมัติ</option>
+            <option value="th">ไทย</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+            <option value="zh">中文</option>
+          </select>
+          <button id="openJoinBtn" class="soft-button">🔗 ห้อง / เข้าร่วม</button>
+          <button id="deckManagerBtn" class="soft-button">🗂️ กองสไลด์</button>
+          <button id="attachTopBtn" class="primary large">＋ แนบสไลด์</button>
+        </div>
+      </div>
+
+      <div class="meeting-workspace">
+        <section class="card slide-card reference-slide-card">
+          <div class="card-head slide-card-head">
+            <div class="slide-title-wrap">
+              <div class="section-icon blue-icon">📄</div>
+              <div>
+                <h2>สไลด์ประกอบการประชุม</h2>
+                <p id="slideMeta">อัปโหลดและแสดงสไลด์สำหรับการประชุมของคุณ</p>
+              </div>
+            </div>
+            <div class="slide-controls">
+              <button id="prevBtn">←</button>
+              <b id="pageCount">0 / 0</b>
+              <button id="nextBtn">→</button>
+              <button id="openOriginalBtn">↗ ดูเต็มจอ</button>
+            </div>
+          </div>
+
+          <div id="dropZone" class="drop-zone reference-drop-zone">
+            <div class="upload-art">
+              <div class="doc one">▤</div>
+              <div class="doc two">▧</div>
+              <div class="plus">＋</div>
+            </div>
+            <h3>ลากไฟล์มาวาง หรือกด “แนบสไลด์”</h3>
+            <p>รองรับ PDF, PowerPoint (PPT, PPTX) และรูปภาพ (PNG, JPG, JPEG)<br>ไฟล์จะแสดงบนหน้าจอแบบไม่ดัดแปลง</p>
+            <button id="attachCenterBtn" class="primary upload-button">⇧ เลือกไฟล์สไลด์</button>
+            <input id="fileInput" type="file" hidden accept=".pdf,.ppt,.pptx,.odp,.docx,.xlsx,.txt,.md,.csv,.json,.xml,.html,.png,.jpg,.jpeg,.webp,.bmp">
+            <span class="drop-hint">หรือ ลากไฟล์มาวางที่นี่</span>
+          </div>
+
+          <div id="viewerWrap" class="viewer-wrap hidden">
+            <iframe id="pdfViewer" class="viewer hidden"></iframe>
+            <img id="imageViewer" class="viewer image-view hidden" alt="slide">
+            <div id="textViewer" class="viewer text-view hidden"></div>
+          </div>
+
+          <div class="presenter-row compact-presenter-row">
+            <div class="presenter-actions">
+              <button id="autoReadBtn" class="primary">▶ อ่านและเลื่อนอัตโนมัติ</button>
+              <button id="stopReadBtn">■ หยุด</button>
+            </div>
+            <div class="presenter-status"><span id="readStatus">พร้อมอ่าน</span></div>
+          </div>
+        </section>
+
+        <aside class="meeting-side">
+          <section class="card assistant-card">
+            <div class="assistant-head">
+              <div class="assistant-title">
+                <div class="section-icon purple-icon">🎙️</div>
+                <div>
+                  <h2>AI ผู้ประกาศข่าว</h2>
+                  <p>อ่านสไลด์และติดตามการประชุมแบบอัตโนมัติ</p>
+                </div>
+              </div>
+              <span id="assistantLivePill" class="live-pill">● READY</span>
+            </div>
+
+            <div class="assistant-portrait">
+              <img id="assistantPortraitImg" src="news-presenter.png" alt="MeetCast AI Meeting News">
+              <video id="assistantPortraitVideo" class="hidden" muted loop playsinline></video>
+              <div id="presenterTicker" class="presenter-ticker">
+                <div id="presenterTickerText" class="presenter-ticker-text">MeetCast AI • พร้อมสำหรับการประชุมอัจฉริยะ</div>
+              </div>
+            </div>
+
+            <div class="assistant-status-box">
+              <b id="assistantStatus">พร้อมอ่านสไลด์</b>
+              <span>เมื่อเริ่ม Auto Slide ระบบจะอ่านสไลด์ แล้วเลื่อนไปทางขวาทีละหน้า</span>
+            </div>
+          </section>
+
+          <section id="commanderCard" class="card commander-card">
+            <div class="commander-head">
+              <div class="section-icon commander-icon">⭐</div>
+              <div>
+                <h2>ผู้บังคับบัญชา</h2>
+                <p id="commanderUnitThView">ศูนย์ค้นหาและช่วยชีวิต</p>
+                <small id="commanderUnitEnView">SEARCH AND RESCUE CENTER</small>
+              </div>
+            </div>
+
+            <div class="commander-profile">
+              <div class="commander-photo-wrap">
+                <img id="commanderPhotoView" src="commander-default.png" alt="ผู้บังคับบัญชา">
+              </div>
+              <div class="commander-profile-text">
+                <h3 id="commanderNameView">พล.อ.ต.อิษฐ์ สงวนศักดิ์</h3>
+                <div id="commanderPositionView" class="commander-position">ผบ.ศศว.ศปอ.</div>
+                <div id="commanderRoleView" class="commander-role">ผู้บังคับบัญชาแจ้งหรือสั่งการในที่ประชุม</div>
+              </div>
+            </div>
+          </section>
+
+          <section id="presentationCard" class="card presentation-card">
+            <div class="presentation-head">
+              <div class="section-icon presentation-icon">📡</div>
+              <div>
+                <h2>นำเสนอ</h2>
+                <p id="presentationMeetingTitleView">ประชุมศูนย์ค้นหาและช่วยชีวิต</p>
+              </div>
+              <span id="presentationStateBadge" class="presentation-state-badge">พร้อมนำเสนอ</span>
+            </div>
+
+            <div class="presentation-meeting-meta">
+              <b id="presentationCommandView">กองบัญชาการควบคุมการปฏิบัติทางอากาศ</b>
+              <span id="presentationRoundView">ครั้งที่ ๒/๖๙</span>
+              <span id="presentationDateTimeView">ในวันพุธที่ ๑๑ มี.ค.๖๙, ๐๙๐๐</span>
+              <span id="presentationLocationView">ณ ห้องประชุม กบค.ศกป.คปอ.</span>
+            </div>
+
+            <div class="presentation-current">
+              <small>เชื่อมโยงกับสไลด์ปัจจุบัน</small>
+              <strong id="presentationCurrentTopic">ศูนย์ค้นหาและช่วยชีวิต</strong>
+              <div id="presentationCurrentDetail">SEARCH AND RESCUE CENTER</div>
+            </div>
+
+            <div id="presentationPresenterBlock" class="presentation-presenters hidden">
+              <small>หน่วย / ผู้รับผิดชอบที่นำเสนอ</small>
+              <div id="presentationPresenterList"></div>
+            </div>
+          </section>
+
+          <section class="card live-meeting-card">
+            <div class="live-meeting-title">
+              <div class="section-icon radio-icon">◉</div>
+              <div>
+                <h2>ประชุมสด</h2>
+                <p id="meetingStatus">พร้อมเริ่มประชุม</p>
+              </div>
+              <div class="timer" id="timer">00:00:00</div>
+            </div>
+
+            <div id="meetingRoomBadge" class="meeting-room-badge hidden"><span>ROOM</span><b id="meetingRoomCode">------</b><small id="meetingRoomPeople">0 คน</small></div>
+            <input id="meetingTitle" class="meeting-title-input" placeholder="ชื่อการประชุม" value="การประชุมใหม่">
+
+            <div class="live-controls">
+              <button id="startMeetingBtn" class="primary start-live-btn">▶ เริ่มประชุม</button>
+              <button id="pauseMeetingBtn" disabled>Ⅱ พัก</button>
+              <button id="resumeMeetingBtn" disabled>▶ ต่อ</button>
+              <button id="endMeetingBtn" class="danger" disabled>■ จบ</button>
+            </div>
+
+            <div class="live-divider"></div>
+            <div class="transcript-label">📝 Transcript / โน้ตการประชุม</div>
+            <textarea id="transcript" class="transcript side-transcript" placeholder="Transcript และโน้ตการประชุมจะแสดงที่นี่..."></textarea>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+
+
+    <section id="view-join" class="view">
+      <div class="page-heading">
+        <div><h1>เข้าร่วมประชุม</h1><p>สร้างห้องบนเครื่องนี้ หรือเข้าร่วมด้วยรหัสห้อง 6 ตัว</p></div>
+        <button id="joinBackMeetingBtn" class="soft-button">← กลับห้องประชุม</button>
+      </div>
+
+      <div class="join-grid">
+        <section class="card join-card">
+          <div class="join-icon">✦</div>
+          <h2>สร้างห้องประชุม</h2>
+          <p>สร้างรหัสห้อง แล้วแชร์ลิงก์ให้ผู้เข้าร่วมที่อยู่ Wi‑Fi/LAN เดียวกัน</p>
+          <label>ชื่อผู้สร้างห้อง
+            <input id="createRoomName" class="join-input" maxlength="40" placeholder="เช่น ผู้ควบคุมการประชุม">
+          </label>
+          <label>ชื่อห้องประชุม
+            <input id="createRoomTitle" class="join-input" maxlength="80" placeholder="เช่น ประชุมประจำสัปดาห์">
+          </label>
+          <button id="createRoomBtn" class="primary join-main-btn">＋ สร้างห้อง</button>
+        </section>
+
+        <section class="card join-card">
+          <div class="join-icon">↪</div>
+          <h2>เข้าร่วมด้วยรหัส</h2>
+          <p>ใช้สำหรับทดสอบในโปรแกรมเครื่องเดียวกัน หรือเปิดลิงก์ LAN จากเครื่องเจ้าของห้อง</p>
+          <label>รหัสห้อง
+            <input id="joinRoomCode" class="join-input room-code-input" maxlength="6" placeholder="ABC123" autocomplete="off">
+          </label>
+          <label>ชื่อผู้เข้าร่วม
+            <input id="joinDisplayName" class="join-input" maxlength="40" placeholder="ชื่อที่จะแสดงในห้อง">
+          </label>
+          <button id="joinRoomBtn" class="primary join-main-btn">เข้าร่วมประชุม</button>
+        </section>
+      </div>
+
+      <section id="activeRoomCard" class="card active-room-card hidden">
+        <div class="active-room-head">
+          <div>
+            <span class="room-online">● ห้องกำลังเปิด</span>
+            <h2 id="activeRoomTitle">ห้องประชุม</h2>
+            <p>รหัสห้อง <strong id="activeRoomCode">------</strong></p>
+          </div>
+          <button id="leaveRoomBtn" class="danger-room-btn">ออกจากห้อง</button>
+        </div>
+        <div class="room-share-box">
+          <div><small>ลิงก์สำหรับโทรศัพท์/คอมเครื่องอื่นในเครือข่ายเดียวกัน</small><code id="activeRoomURL">กำลังตรวจสอบเครือข่าย...</code></div>
+          <div class="room-share-actions">
+            <button id="copyRoomCodeBtn">คัดลอกรหัส</button>
+            <button id="copyRoomLinkBtn">คัดลอกลิงก์</button>
+            <button id="openParticipantPreviewBtn" class="primary">เปิดหน้าทดลองผู้เข้าร่วม</button>
+          </div>
+        </div>
+        <div class="participants-head"><h3>ผู้เข้าร่วม</h3><span id="participantCount">0 คน</span></div>
+        <div id="participantList" class="participant-list"></div>
+      </section>
+
+      <section class="card join-help-card">
+        <b>ทดลองบนเครื่องเดียว:</b> สร้างห้อง → กด “เปิดหน้าทดลองผู้เข้าร่วม” → ใส่ชื่อ → กดเข้าร่วม แล้วกลับมาดูรายชื่อใน MeetCast AI
+        <br><b>ทดลองจากโทรศัพท์:</b> ให้โทรศัพท์อยู่ Wi‑Fi เดียวกับคอม แล้วเปิดลิงก์ LAN ที่แสดงในห้อง
+      </section>
+    </section>
+
+    <section id="view-library" class="view">
+      <div class="page-heading"><div><h1>คลังสไลด์</h1><p>ไฟล์ที่แนบไว้ในเครื่องนี้</p></div><button id="libraryAttachBtn" class="primary large">＋ แนบสไลด์</button></div>
+      <div id="slideLibrary" class="library-grid"></div>
+    </section>
+
+    <section id="view-summary" class="view">
+      <div class="page-heading"><div><h1>สรุปประชุม</h1><p>Decision, Action Items, Pending และ Transcript</p></div></div>
+      <div class="summary-grid"><div class="card summary-box"><h3>📌 Decision</h3><div id="decisionBox">ยังไม่มีข้อมูล</div></div><div class="card summary-box"><h3>✅ Action Items</h3><div id="actionBox">ยังไม่มีข้อมูล</div></div><div class="card summary-box"><h3>⏳ Pending</h3><div id="pendingBox">ยังไม่มีข้อมูล</div></div></div>
+      <div class="card summary-main"><div class="card-head"><div><h2>รายละเอียดการประชุม</h2><p id="summaryMeetingTitle">ยังไม่มีการประชุม</p></div></div><h3>Transcript</h3><div id="summaryTranscript" class="summary-transcript">ยังไม่มี Transcript</div></div>
+      <div class="card history-card"><div class="card-head"><div><h2>ประชุมย้อนหลัง</h2><p>เปิดข้อมูลที่บันทึกไว้ในเครื่อง</p></div><button id="refreshHistoryBtn">↻ รีเฟรช</button></div><div id="historyList"></div></div>
+    </section>
+
+    <section id="view-settings" class="view">
+      <div class="page-heading"><div><h1>ตั้งค่า</h1><p>ตั้งค่าการอ่านและฟีเจอร์การประชุม</p></div></div>
+      <div class="settings-health card"><div><b>✓ ระบบตั้งค่าพร้อมใช้งาน</b><span>เมนูหลักทำงานแยกจากฟีเจอร์อื่น</span></div><button id="backMeetingBtn">← กลับห้องประชุม</button></div>
+      <div class="settings-grid">
+        <div class="card setting-card"><h3>AI เลขานุการ</h3><p>วิเคราะห์ Decision / Action / Pending หลังจบประชุม</p><label class="toggle"><input id="secretaryToggle" type="checkbox" checked><span></span></label></div>
+        <div class="card setting-card"><h3>ถาม AI จากที่ประชุม</h3><p>เตรียมโครงสร้างสำหรับค้นจากสไลด์และ Transcript</p><label class="toggle"><input id="qaToggle" type="checkbox" checked><span></span></label></div>
+        <div class="card setting-card"><h3>เสียงอ่านสไลด์</h3><p>เลือกเสียงจาก Windows และปรับให้อ่านชัดเจน ไหลลื่น และเว้นจังหวะเป็นธรรมชาติ</p>
+          <select id="slideVoiceSelect" class="setting-select"><option value="">อัตโนมัติ — เลือกเสียงภาษาไทยให้</option></select>
+          <select id="voiceClarityMode" class="setting-select">
+            <option value="clear" selected>ชัดเจน — 0.90x</option>
+            <option value="normal">ปกติ — 1.00x</option>
+            <option value="brief">กระชับ — 1.08x</option>
+          </select>
+          <select id="slideVoiceRateSetting" class="setting-select">
+            <option value="0.8">ช้ามาก 0.80x</option>
+            <option value="0.9" selected>ชัดเจน 0.90x</option>
+            <option value="1">ปกติ 1.00x</option>
+            <option value="1.08">กระชับ 1.08x</option>
+            <option value="1.15">เร็ว 1.15x</option>
+          </select>
+          <select id="voicePauseSetting" class="setting-select">
+            <option value="80">พักสั้น 0.08 วิ</option>
+            <option value="140" selected>พักธรรมชาติ 0.14 วิ</option>
+            <option value="220">พักชัดเจน 0.22 วิ</option>
+          </select>
+          <button id="testSlideVoiceBtn" class="setting-action-btn">▶ ทดลองเสียงอ่าน</button>
+          <div id="voiceQualityStatus" class="voice-quality-status">พร้อมใช้โหมดเสียงชัดเจน</div>
+        </div>
+        <div class="card setting-card"><h3>นักข่าว / ผู้ประกาศ</h3><p>เปลี่ยนภาพผู้ประกาศที่แสดงในหน้าห้องประชุม</p>
+          <select id="presenterSelect" class="setting-select">
+            <option value="attached">รูปที่แนบ</option>
+            <option value="female">AI ผู้หญิง</option>
+            <option value="male">AI ผู้ชาย</option>
+            <option value="custom">รูปกำหนดเอง</option>
+          </select>
+          <button id="customPresenterBtn" class="setting-action-btn">เลือกรูปหรือวิดีโอนักข่าวจากเครื่อง</button>
+          <input id="customPresenterInput" type="file" accept="image/*,video/mp4,video/webm,video/quicktime" hidden>
+        </div>
+        <div class="card setting-card commander-setting-card">
+          <h3>ผู้บังคับบัญชา</h3>
+          <p>แก้ไขรายละเอียดตามเอกสารที่แนบ และเปลี่ยนรูปได้จากหมวดตั้งค่า</p>
+
+          <label class="setting-field">หน่วยงาน (TH)
+            <input id="commanderUnitThInput" class="setting-input" maxlength="120" placeholder="เช่น ศูนย์ค้นหาและช่วยชีวิต">
+          </label>
+          <label class="setting-field">หน่วยงาน (EN)
+            <input id="commanderUnitEnInput" class="setting-input" maxlength="120" placeholder="เช่น SEARCH AND RESCUE CENTER">
+          </label>
+          <label class="setting-field">ชื่อผู้บังคับบัญชา
+            <input id="commanderNameInput" class="setting-input" maxlength="120" placeholder="ชื่อ-นามสกุล">
+          </label>
+          <label class="setting-field">ตำแหน่ง
+            <input id="commanderPositionInput" class="setting-input" maxlength="120" placeholder="เช่น ผบ.ศศว.ศปอ.">
+          </label>
+          <label class="setting-field">รายละเอียด / ข้อความกำกับ
+            <textarea id="commanderRoleInput" class="setting-textarea" placeholder="เช่น ผู้บังคับบัญชาแจ้งหรือสั่งการในที่ประชุม"></textarea>
+          </label>
+          <div class="setting-action-row">
+            <button id="changeCommanderPhotoBtn" class="setting-action-btn">เปลี่ยนรูปผู้บังคับบัญชา</button>
+            <button id="resetCommanderBtn" class="setting-action-btn">รีเซ็ตตามไฟล์แนบ</button>
+          </div>
+          <input id="commanderPhotoInput" type="file" accept="image/*" hidden>
+          <label class="toggle-row">
+            <span>แสดงหมวดผู้บังคับบัญชาในหน้าห้องประชุม</span>
+            <label class="toggle"><input id="commanderVisibleToggle" type="checkbox" checked><span></span></label>
+          </label>
+        </div>
+        <div class="card setting-card presentation-setting-card">
+          <h3>นำเสนอ</h3>
+          <p>เปิด/ปิดรายละเอียดการนำเสนอ และแก้ไขข้อมูลจาก PowerPoint ที่แนบได้ ระบบจะเชื่อมโยงหัวข้อกับหน้าสไลด์ปัจจุบันอัตโนมัติ</p>
+
+          <label class="toggle-row">
+            <span>แสดงหมวด “นำเสนอ” ในหน้าห้องประชุม</span>
+            <label class="toggle"><input id="presentationVisibleToggle" type="checkbox" checked><span></span></label>
+          </label>
+          <label class="toggle-row">
+            <span>เชื่อมโยงข้อมูลกับสไลด์อัตโนมัติ</span>
+            <label class="toggle"><input id="presentationSyncToggle" type="checkbox" checked><span></span></label>
+          </label>
+
+          <label class="setting-field">ชื่อการประชุม
+            <input id="presentationTitleInput" class="setting-input" maxlength="160">
+          </label>
+          <label class="setting-field">หน่วย / กองบัญชาการ
+            <input id="presentationCommandInput" class="setting-input" maxlength="160">
+          </label>
+          <label class="setting-field">ครั้งที่
+            <input id="presentationRoundInput" class="setting-input" maxlength="80">
+          </label>
+          <label class="setting-field">วัน / เวลา
+            <input id="presentationDateTimeInput" class="setting-input" maxlength="120">
+          </label>
+          <label class="setting-field">สถานที่
+            <input id="presentationLocationInput" class="setting-input" maxlength="160">
+          </label>
+
+          <label class="setting-field">ระเบียบวาระ 1–4
+            <textarea id="presentationAgenda14Input" class="setting-textarea"></textarea>
+          </label>
+          <label class="setting-field">วาระนำเสนอผลงาน
+            <textarea id="presentationWorkTopicInput" class="setting-textarea"></textarea>
+          </label>
+          <label class="setting-field">หน่วย / ผู้รับผิดชอบที่นำเสนอ (1 บรรทัดต่อ 1 รายการ)
+            <textarea id="presentationPresentersInput" class="setting-textarea"></textarea>
+          </label>
+          <label class="setting-field">ระเบียบวาระ 6–7
+            <textarea id="presentationAgenda67Input" class="setting-textarea"></textarea>
+          </label>
+          <label class="setting-field">เลขสไลด์ที่เป็น “นำเสนอผลงาน”
+            <input id="presentationWorkSlideInput" class="setting-input" type="number" min="1" max="999" value="4">
+          </label>
+
+          <div class="setting-action-row">
+            <button id="previewPresentationBtn" class="setting-action-btn">ดูหมวดนำเสนอ</button>
+            <button id="resetPresentationBtn" class="setting-action-btn">รีเซ็ตตามไฟล์แนบ</button>
+          </div>
+        </div>
+
+        <div class="card setting-card">
+          <h3>ข้อความวิ่งบนผู้ประกาศ</h3>
+          <p>กำหนดข้อความที่ต้องการให้วิ่งผ่านด้านล่างของผู้ประกาศ</p>
+          <textarea id="tickerTextSetting" class="setting-textarea" placeholder="พิมพ์ข้อความวิ่ง...">MeetCast AI • พร้อมสำหรับการประชุมอัจฉริยะ</textarea>
+          <select id="tickerSpeedSetting" class="setting-select">
+            <option value="18">ช้า</option>
+            <option value="12" selected>ปกติ</option>
+            <option value="8">เร็ว</option>
+          </select>
+          <label class="toggle-row">
+            <span>แสดงข้อความวิ่ง</span>
+            <label class="toggle"><input id="tickerToggle" type="checkbox" checked><span></span></label>
+          </label>
+        </div>
+
+        <div class="card setting-card"><h3>เวลารอเมื่อสไลด์ไม่มีข้อความ</h3><p>ถ้าหน้าไหนไม่มีข้อความให้อ่าน ระบบจะรอตามเวลานี้ก่อนเลื่อนไปหน้าถัดไป</p><select id="slideIntervalSetting" class="setting-select"><option value="3">3 วินาที</option><option value="5" selected>5 วินาที</option><option value="8">8 วินาที</option><option value="10">10 วินาที</option><option value="15">15 วินาที</option></select></div>
+        <div class="card setting-card"><h3>Auto Slide</h3><p>อ่านสไลด์ให้จบก่อน แล้วเลื่อนไปทางขวาทีละหน้าและอ่านต่อจนถึงหน้าสุดท้าย</p><label class="toggle"><input id="autoAdvanceToggle" type="checkbox" checked><span></span></label></div>
+        <div class="card setting-card"><h3>ความเป็นส่วนตัว</h3><p>ระบบนี้ทำงานแบบ Local และเก็บไฟล์ไว้ในเครื่อง</p><span class="local-badge">🔒 Local Mode</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+
+<div id="deckManagerModal" class="modal hidden">
+  <div class="modal-card deck-manager-modal">
+    <div class="deck-manager-modal-head">
+      <div>
+        <h2>🗂️ กองสไลด์</h2>
+        <p>แยกสไลด์เป็นแต่ละกอง และตั้งค่าความเร็วของแต่ละกองได้</p>
+      </div>
+      <button id="closeDeckManagerBtn" class="modal-close-btn">✕</button>
+    </div>
+    <div class="deck-manager-toolbar">
+      <button id="addDeckBtn" class="primary">＋ เพิ่มกอง</button>
+    </div>
+    <div id="deckGrid" class="deck-grid"></div>
+  </div>
+</div>
+
+<div id="confirmModal" class="modal hidden"><div class="modal-card"><div class="modal-icon">📎</div><h2>ยืนยันสไลด์</h2><p>ตรวจสอบไฟล์ก่อนนำเข้าห้องประชุม</p><div id="confirmMeta" class="confirm-meta"></div><div class="modal-actions"><button id="cancelConfirmBtn">ยกเลิก</button><button id="confirmFileBtn" class="primary">✓ ยืนยันและแสดงผล</button></div></div></div>
+
+<div id="deckSettingsModal" class="modal hidden">
+  <div class="modal-card deck-settings-modal">
+    <h3>⚙️ ตั้งค่ากองสไลด์</h3>
+    <label>ชื่อกอง
+      <input id="deckSettingName" placeholder="ตั้งชื่อภายหลังได้">
+    </label>
+    <label>เวลารอเมื่อไม่มีข้อความ
+      <select id="deckSettingInterval">
+        <option value="3">3 วินาที</option>
+        <option value="5">5 วินาที</option>
+        <option value="8">8 วินาที</option>
+        <option value="10">10 วินาที</option>
+        <option value="15">15 วินาที</option>
+      </select>
+    </label>
+    <label class="setting-inline">
+      <span>Auto Slide</span>
+      <input id="deckSettingAuto" type="checkbox" checked>
+    </label>
+    <label class="setting-inline">
+      <span>วนซ้ำเมื่อถึงหน้าสุดท้าย</span>
+      <input id="deckSettingLoop" type="checkbox">
+    </label>
+    <div class="modal-actions">
+      <button id="cancelDeckSettingsBtn">ยกเลิก</button>
+      <button id="saveDeckSettingsBtn" class="primary">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>

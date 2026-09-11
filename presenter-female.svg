@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 460">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#123d84"/><stop offset=".55" stop-color="#2b82d9"/><stop offset="1" stop-color="#5b2b9b"/></linearGradient><linearGradient id="skin" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f7ccb0"/><stop offset="1" stop-color="#dca282"/></linearGradient></defs>
+<rect width="700" height="460" fill="url(#bg)"/><g opacity=".2" fill="#a2e8ff"><rect x="35" y="55" width="150" height="92" rx="12"/><rect x="510" y="72" width="140" height="86" rx="12"/><rect x="45" y="200" width="110" height="70" rx="10"/><rect x="545" y="206" width="105" height="70" rx="10"/></g>
+<path d="M247 240q-13-184 105-194 123 10 105 197l-53-25-110 4z" fill="#30243c"/><circle cx="351" cy="165" r="88" fill="url(#skin)"/><path d="M270 141q20-95 87-91 76 10 79 91-46-32-79-32-35 19-87 32z" fill="#32263e"/><ellipse cx="318" cy="168" rx="8" ry="6" fill="#1c2532"/><ellipse cx="385" cy="168" rx="8" ry="6" fill="#1c2532"/><path d="M326 207q25 20 50 0" fill="none" stroke="#a14f58" stroke-width="6" stroke-linecap="round"/>
+<path d="M213 460q8-181 138-184 129 4 138 184z" fill="#172e56"/><path d="M303 278l48 62 48-62 40 182H262z" fill="#f8f8fb"/><path d="M351 338l-20 122h40z" fill="#7b4fd1"/><path d="M351 337l-18-38h36z" fill="#5b418e"/>
+<rect x="504" y="26" width="142" height="48" rx="11" fill="#ff3b79"/><text x="575" y="58" text-anchor="middle" font-family="Segoe UI,Arial" font-size="26" font-weight="700" fill="white">ON AIR</text>
+</svg>
