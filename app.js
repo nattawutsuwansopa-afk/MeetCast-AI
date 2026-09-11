@@ -17,6 +17,48 @@ function formatBytes(n){if(n<1024)return n+' B';if(n<1024*1024)return (n/1024).t
 function pageText(){return (state.slide?.pages?.[state.page]||'').trim()}
 function pageTotal(){return Math.max(1,state.slide?.page_count||state.slide?.pages?.length||1)}
 
+async function apiJSON(url,options={}){
+  let response;
+  try{
+    response=await fetch(url,options);
+  }catch(err){
+    throw new Error('เชื่อมต่อ MeetCast Backend ไม่ได้ กรุณาปิดหน้านี้แล้วเปิดโปรแกรมผ่าน MeetCastAI.exe ใหม่');
+  }
+
+  const contentType=(response.headers.get('content-type')||'').toLowerCase();
+  const raw=await response.text();
+  let data=null;
+
+  if(contentType.includes('application/json') || raw.trim().startsWith('{') || raw.trim().startsWith('[')){
+    try{data=raw?JSON.parse(raw):{}}
+    catch(err){
+      throw new Error(`Backend ส่งข้อมูล JSON ไม่สมบูรณ์ (HTTP ${response.status})`);
+    }
+  }else{
+    const looksHTML=/^\s*<!doctype html|^\s*<html|<head[\s>]/i.test(raw);
+    if(looksHTML){
+      throw new Error('ได้รับหน้าเว็บ HTML แทนข้อมูลจาก Backend — กรุณาเปิด MeetCast ด้วยไฟล์ MeetCastAI.exe เท่านั้น และอย่าเปิด app/index.html โดยตรง');
+    }
+    throw new Error((raw||`Backend ตอบกลับ HTTP ${response.status}`).trim().slice(0,220));
+  }
+
+  if(!response.ok){
+    throw new Error(data?.detail||data?.error||data?.message||`ดำเนินการไม่สำเร็จ (HTTP ${response.status})`);
+  }
+  return data;
+}
+async function verifyBackend(){
+  if(location.protocol==='file:'){
+    throw new Error('หน้านี้ถูกเปิดจากไฟล์โดยตรง กรุณาปิดหน้านี้แล้วดับเบิลคลิก MeetCastAI.exe');
+  }
+  const health=await apiJSON('/api/health',{cache:'no-store'});
+  if(health?.server!=='meetcast-ai'){
+    throw new Error('ไม่พบ MeetCast Backend ที่ถูกต้อง กรุณาปิดโปรแกรมและเปิด MeetCastAI.exe ใหม่');
+  }
+  return health;
+}
+
+
 function showView(name){const target=$('view-'+name);if(!target){console.warn('Unknown view:',name);return false}document.querySelectorAll('.view').forEach(v=>v.classList.remove('active-view'));target.classList.add('active-view');document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.view===name));try{if(name==='library')loadLibrary()}catch(e){console.warn('library init',e)}try{if(name==='summary'){renderSummary(state.latestMeeting);loadHistory()}}catch(e){console.warn('summary init',e)}window.scrollTo({top:0,behavior:'smooth'});return true;}
 function bindCriticalNavigation(){document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{showView(b.dataset.view);closeSidebar();});if($('menuBtn'))$('menuBtn').onclick=()=>{$('sidebar')?.classList.contains('open')?closeSidebar():openSidebar()};if($('closeSidebarBtn'))$('closeSidebarBtn').onclick=closeSidebar;if($('sidebarOverlay'))$('sidebarOverlay').onclick=closeSidebar;if($('topSettingsBtn'))$('topSettingsBtn').onclick=()=>{showView('settings');closeSidebar()};if($('backMeetingBtn'))$('backMeetingBtn').onclick=()=>showView('meeting');}bindCriticalNavigation();
 
@@ -127,220 +169,8 @@ if($('openParticipantPreviewBtn'))$('openParticipantPreviewBtn').onclick=()=>{
 restoreRoomSession();
 
 
-const commanderStorageKey='meetcast_commander_profile_v26';
-const commanderDefaults={
-  visible:true,
-  unitTh:'ศูนย์ค้นหาและช่วยชีวิต',
-  unitEn:'SEARCH AND RESCUE CENTER',
-  name:'พล.อ.ต.อิษฐ์ สงวนศักดิ์',
-  position:'ผบ.ศศว.ศปอ.',
-  role:'ผู้บังคับบัญชาแจ้งหรือสั่งการในที่ประชุม',
-  photo:'commander-default.png'
-};
-function readCommanderProfile(){
-  try{
-    const saved=JSON.parse(localStorage.getItem(commanderStorageKey)||'null');
-    return {...commanderDefaults,...(saved||{})};
-  }catch(e){
-    return {...commanderDefaults};
-  }
-}
-function saveCommanderProfile(profile){
-  localStorage.setItem(commanderStorageKey,JSON.stringify(profile));
-}
-function fillCommanderInputs(profile){
-  $('commanderUnitThInput').value=profile.unitTh||'';
-  $('commanderUnitEnInput').value=profile.unitEn||'';
-  $('commanderNameInput').value=profile.name||'';
-  $('commanderPositionInput').value=profile.position||'';
-  $('commanderRoleInput').value=profile.role||'';
-  $('commanderVisibleToggle').checked=profile.visible!==false;
-}
-function renderCommanderProfile(){
-  const profile=readCommanderProfile();
-  $('commanderUnitThView').textContent=profile.unitTh||'';
-  $('commanderUnitEnView').textContent=profile.unitEn||'';
-  $('commanderNameView').textContent=profile.name||'';
-  $('commanderPositionView').textContent=profile.position||'';
-  $('commanderRoleView').textContent=profile.role||'';
-  $('commanderPhotoView').src=profile.photo||'commander-default.png';
-  $('commanderCard').classList.toggle('hidden',profile.visible===false);
-  fillCommanderInputs(profile);
-}
-function updateCommanderProfile(patch){
-  const next={...readCommanderProfile(),...patch};
-  saveCommanderProfile(next);
-  renderCommanderProfile();
-}
-function bindCommanderInputs(){
-  $('commanderUnitThInput').oninput=()=>updateCommanderProfile({unitTh:$('commanderUnitThInput').value});
-  $('commanderUnitEnInput').oninput=()=>updateCommanderProfile({unitEn:$('commanderUnitEnInput').value});
-  $('commanderNameInput').oninput=()=>updateCommanderProfile({name:$('commanderNameInput').value});
-  $('commanderPositionInput').oninput=()=>updateCommanderProfile({position:$('commanderPositionInput').value});
-  $('commanderRoleInput').oninput=()=>updateCommanderProfile({role:$('commanderRoleInput').value});
-  $('commanderVisibleToggle').onchange=()=>updateCommanderProfile({visible:$('commanderVisibleToggle').checked});
-  $('changeCommanderPhotoBtn').onclick=()=>$('commanderPhotoInput').click();
-  $('commanderPhotoInput').onchange=e=>{
-    const file=e.target.files?.[0];
-    if(!file)return;
-    if(!file.type.startsWith('image/'))return toast('รองรับเฉพาะรูปภาพผู้บังคับบัญชา');
-    if(file.size>10*1024*1024)return toast('รูปผู้บังคับบัญชาต้องไม่เกิน 10 MB');
-    const reader=new FileReader();
-    reader.onload=()=>{
-      try{
-        updateCommanderProfile({photo:String(reader.result||'')});
-        toast('เปลี่ยนรูปผู้บังคับบัญชาแล้ว');
-      }catch(err){
-        toast('ไฟล์ใหญ่เกินพื้นที่จัดเก็บในโปรแกรม');
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-  $('resetCommanderBtn').onclick=()=>{
-    saveCommanderProfile({...commanderDefaults});
-    renderCommanderProfile();
-    toast('รีเซ็ตข้อมูลผู้บังคับบัญชาแล้ว');
-  };
-}
-
-renderCommanderProfile();
-bindCommanderInputs();
 
 
-const presentationStorageKey='meetcast_presentation_profile_v28';
-const presentationDefaults={
-  visible:true,
-  sync:true,
-  title:'ประชุมศูนย์ค้นหาและช่วยชีวิต',
-  command:'กองบัญชาการควบคุมการปฏิบัติทางอากาศ',
-  round:'ครั้งที่ ๒/๖๙',
-  dateTime:'ในวันพุธที่ ๑๑ มี.ค.๖๙, ๐๙๐๐',
-  location:'ณ ห้องประชุม กบค.ศกป.คปอ.',
-  agenda14:[
-    '๑. เรื่อง ประธานแจ้งให้ที่ประชุมทราบ',
-    '๒. เรื่อง สรุปผลการประชุม ทอ.ครั้งที่ ๒/๖๙',
-    '๓. เรื่อง กิจกรรมนิรภัยภาคพื้น',
-    '๔. เรื่อง สถานภาพกำลังพล'
-  ].join('\n'),
-  workTopic:'๕. เรื่อง ผลการปฏิบัติงานที่สำคัญประจำเดือน มี.ค.๖๙ การพัฒนาหน่วย และกำลังพล แผนการปฏิบัติงานเดือน เม.ย.๖๙ ปัญหาข้อขัดข้อง และข้อเสนอแนะ',
-  presenters:[
-    'ผธก.ศคว.คปอ.',
-    'ฝสอ.ผนน.ศคว.คปอ.',
-    'ฝพด.ผนน.ศคว.คปอ.',
-    'กปคว.ศคว.ฯ / กฝคว.ศคว.ฯ',
-    'จนท.ค้นหาและช่วยชีวิต'
-  ].join('\n'),
-  agenda67:[
-    '๖. เรื่องอื่น ๆ',
-    '๗. เรื่อง ผู้บังคับบัญชาแจ้งหรือสั่งการในที่ประชุม'
-  ].join('\n'),
-  workSlide:4
-};
-function readPresentationProfile(){
-  try{
-    const saved=JSON.parse(localStorage.getItem(presentationStorageKey)||'null');
-    return {...presentationDefaults,...(saved||{})};
-  }catch(e){
-    return {...presentationDefaults};
-  }
-}
-function savePresentationProfile(profile){
-  localStorage.setItem(presentationStorageKey,JSON.stringify(profile));
-}
-function fillPresentationInputs(p){
-  $('presentationVisibleToggle').checked=p.visible!==false;
-  $('presentationSyncToggle').checked=p.sync!==false;
-  $('presentationTitleInput').value=p.title||'';
-  $('presentationCommandInput').value=p.command||'';
-  $('presentationRoundInput').value=p.round||'';
-  $('presentationDateTimeInput').value=p.dateTime||'';
-  $('presentationLocationInput').value=p.location||'';
-  $('presentationAgenda14Input').value=p.agenda14||'';
-  $('presentationWorkTopicInput').value=p.workTopic||'';
-  $('presentationPresentersInput').value=p.presenters||'';
-  $('presentationAgenda67Input').value=p.agenda67||'';
-  $('presentationWorkSlideInput').value=String(p.workSlide||4);
-}
-function presentationTopicForPage(pageNumber,p){
-  const workSlide=Math.max(1,Number(p.workSlide||4));
-  if(!p.sync){
-    return {title:'โหมดนำเสนอ',detail:p.workTopic||'',presenters:false,live:false};
-  }
-  if(pageNumber===1){
-    return {title:'ศูนย์ค้นหาและช่วยชีวิต',detail:'SEARCH AND RESCUE CENTER',presenters:false,live:false};
-  }
-  if(pageNumber===2){
-    return {title:p.title||'การประชุม',detail:[p.command,p.round,p.dateTime,p.location].filter(Boolean).join('\n'),presenters:false,live:false};
-  }
-  if(pageNumber===3){
-    return {title:'ระเบียบวาระการประชุม ๑–๔',detail:p.agenda14||'',presenters:false,live:false};
-  }
-  if(pageNumber===workSlide){
-    return {title:'กำลังนำเสนอผลงาน',detail:p.workTopic||'',presenters:true,live:true};
-  }
-  if(pageNumber===5){
-    return {title:'ระเบียบวาระการประชุม ๖–๗',detail:p.agenda67||'',presenters:false,live:false};
-  }
-  return {title:`สไลด์ ${pageNumber}`,detail:pageText()||'กำลังนำเสนอข้อมูลจากสไลด์',presenters:false,live:true};
-}
-function renderPresentation(){
-  const p=readPresentationProfile();
-  const card=$('presentationCard');
-  card.classList.toggle('hidden',p.visible===false);
-  fillPresentationInputs(p);
-  $('presentationMeetingTitleView').textContent=p.title||'การประชุม';
-  $('presentationCommandView').textContent=p.command||'';
-  $('presentationRoundView').textContent=p.round||'';
-  $('presentationDateTimeView').textContent=p.dateTime||'';
-  $('presentationLocationView').textContent=p.location||'';
-
-  const current=presentationTopicForPage(state.slide?state.page+1:1,p);
-  $('presentationCurrentTopic').textContent=current.title;
-  $('presentationCurrentDetail').textContent=current.detail||'';
-  $('presentationStateBadge').textContent=current.live?'กำลังนำเสนอ':'พร้อมนำเสนอ';
-  $('presentationStateBadge').classList.toggle('live',!!current.live);
-
-  const presenterBlock=$('presentationPresenterBlock');
-  presenterBlock.classList.toggle('hidden',!current.presenters);
-  $('presentationPresenterList').innerHTML=(p.presenters||'')
-    .split(/\r?\n/)
-    .map(x=>x.trim())
-    .filter(Boolean)
-    .map(x=>`<div class="presentation-presenter-row">• ${escapeHtml(x)}</div>`)
-    .join('');
-
-  if(p.visible!==false && p.sync!==false && state.slide){
-    $('meetingTitle').value=p.title||$('meetingTitle').value;
-  }
-}
-function updatePresentationProfile(patch){
-  const next={...readPresentationProfile(),...patch};
-  savePresentationProfile(next);
-  renderPresentation();
-}
-function bindPresentationSettings(){
-  $('presentationVisibleToggle').onchange=()=>updatePresentationProfile({visible:$('presentationVisibleToggle').checked});
-  $('presentationSyncToggle').onchange=()=>updatePresentationProfile({sync:$('presentationSyncToggle').checked});
-  $('presentationTitleInput').oninput=()=>updatePresentationProfile({title:$('presentationTitleInput').value});
-  $('presentationCommandInput').oninput=()=>updatePresentationProfile({command:$('presentationCommandInput').value});
-  $('presentationRoundInput').oninput=()=>updatePresentationProfile({round:$('presentationRoundInput').value});
-  $('presentationDateTimeInput').oninput=()=>updatePresentationProfile({dateTime:$('presentationDateTimeInput').value});
-  $('presentationLocationInput').oninput=()=>updatePresentationProfile({location:$('presentationLocationInput').value});
-  $('presentationAgenda14Input').oninput=()=>updatePresentationProfile({agenda14:$('presentationAgenda14Input').value});
-  $('presentationWorkTopicInput').oninput=()=>updatePresentationProfile({workTopic:$('presentationWorkTopicInput').value});
-  $('presentationPresentersInput').oninput=()=>updatePresentationProfile({presenters:$('presentationPresentersInput').value});
-  $('presentationAgenda67Input').oninput=()=>updatePresentationProfile({agenda67:$('presentationAgenda67Input').value});
-  $('presentationWorkSlideInput').oninput=()=>updatePresentationProfile({workSlide:Math.max(1,Number($('presentationWorkSlideInput').value||4))});
-  $('previewPresentationBtn').onclick=()=>{showView('meeting');renderPresentation();toast('เปิดดูหมวดนำเสนอแล้ว')};
-  $('resetPresentationBtn').onclick=()=>{
-    savePresentationProfile({...presentationDefaults});
-    renderPresentation();
-    toast('รีเซ็ตหมวดนำเสนอตามไฟล์แนบแล้ว');
-  };
-}
-
-renderPresentation();
-bindPresentationSettings();
 
 function deckStorageKey(){return 'meetcast_slide_decks_v13'}
 function saveDecks(){localStorage.setItem(deckStorageKey(),JSON.stringify(state.decks))}
@@ -426,25 +256,37 @@ function prepareFile(file){
 $('cancelConfirmBtn').onclick=()=>{state.pendingFile=null;state.pendingDeckId=null;$('confirmModal').classList.add('hidden');$('fileInput').value=''};
 $('confirmFileBtn').onclick=async()=>{
   const file=state.pendingFile;if(!file)return;
-  $('confirmFileBtn').disabled=true;$('confirmFileBtn').textContent='กำลังนำเข้า...';
+  $('confirmFileBtn').disabled=true;$('confirmFileBtn').textContent='กำลังตรวจ Backend...';
   try{
+    await verifyBackend();
+    $('confirmFileBtn').textContent='กำลังนำเข้าไฟล์...';
     const fd=new FormData();fd.append('file',file);
-    const r=await fetch('/api/upload',{method:'POST',body:fd});const data=await r.json();if(!r.ok)throw new Error(data.detail||'นำเข้าไฟล์ไม่สำเร็จ');
+    const data=await apiJSON('/api/upload',{method:'POST',body:fd});
+    if(!data?.id)throw new Error('Backend ไม่ได้ส่งข้อมูลไฟล์กลับมา กรุณาลองเปิดโปรแกรมใหม่');
     state.slide=data;state.page=0;
     const deck=state.decks.find(x=>x.id===state.pendingDeckId)||activeDeck();
     if(deck){deck.slide=data;state.activeDeckId=deck.id;saveDecks()}
     state.pendingFile=null;state.pendingDeckId=null;$('confirmModal').classList.add('hidden');$('fileInput').value='';
-    renderDecks();renderSlide();toast('ยืนยันและแสดงสไลด์แล้ว');
-  }catch(e){toast(e.message)}finally{$('confirmFileBtn').disabled=false;$('confirmFileBtn').textContent='✓ ยืนยันและแสดงผล'}
+    renderDecks();renderSlide();toast('แนบไฟล์ประชุมสำเร็จ');
+  }catch(e){
+    console.error('Upload failed:',e);
+    toast(e?.message||'แนบไฟล์ไม่สำเร็จ');
+  }finally{
+    $('confirmFileBtn').disabled=false;
+    $('confirmFileBtn').textContent='✓ ยืนยันและแสดงผล';
+  }
 };
 
 function renderSlide(){
   const s=state.slide;if(!s)return;
-  $('slideMeta').textContent=`${s.name} • ${formatBytes(s.size)}${s.preview_kind==='slides'?' • PowerPoint '+pageTotal()+' สไลด์':''}`;$('pageCount').textContent=`${state.page+1} / ${pageTotal()}`;
+  const extraMeta=s.preview_kind==='slides'?` • PowerPoint ${pageTotal()} สไลด์`:s.preview_kind==='image'&&pageText()?' • OCR อ่านข้อความได้':s.preview_kind==='file'?' • แนบไฟล์สำเร็จ':'';
+  $('slideMeta').textContent=`${s.name} • ${formatBytes(s.size)}${extraMeta}`;$('pageCount').textContent=`${state.page+1} / ${pageTotal()}`;
   $('dropZone').classList.add('hidden');$('viewerWrap').classList.remove('hidden');
-  ['pdfViewer','imageViewer','textViewer'].forEach(id=>$(id).classList.add('hidden'));
-  const e=s.ext.toLowerCase();
-  const kind=s.preview_kind||((e==='.pdf')?'pdf':(['.png','.jpg','.jpeg','.webp','.bmp','.gif'].includes(e)?'image':'text'));
+  ['pdfViewer','imageViewer','videoViewer','audioViewer','textViewer'].forEach(id=>$(id).classList.add('hidden'));
+  if($('videoViewer')){$('videoViewer').pause();$('videoViewer').removeAttribute('src')}
+  if($('audioViewer')){$('audioViewer').pause();$('audioViewer').removeAttribute('src')}
+  const e=(s.ext||'').toLowerCase();
+  const kind=s.preview_kind||((e==='.pdf')?'pdf':(['.png','.jpg','.jpeg','.webp','.bmp','.gif','.tif','.tiff'].includes(e)?'image':'file'));
   if(kind==='slides'){
     const pagePreview=s.page_previews?.[state.page]||`${s.preview}${s.preview.includes('?')?'&':'?'}page=${state.page+1}`;
     $('imageViewer').src=`${pagePreview}${pagePreview.includes('?')?'&':'?'}v=${state.page}`;$('imageViewer').classList.remove('hidden');
@@ -456,12 +298,21 @@ function renderSlide(){
     frame.classList.remove('hidden');
   }else if(kind==='image'){
     $('imageViewer').src=s.preview;$('imageViewer').classList.remove('hidden');
+  }else if(kind==='video'){
+    $('videoViewer').src=s.preview;$('videoViewer').classList.remove('hidden');
+  }else if(kind==='audio'){
+    $('audioViewer').src=s.preview;$('audioViewer').classList.remove('hidden');
+  }else if(kind==='text'){
+    $('textViewer').textContent=pageText()||`ไฟล์ ${s.name}`;$('textViewer').classList.remove('hidden');
   }else{
-    const text=pageText()||`ไฟล์ ${s.name}\n\nนำเข้าไฟล์แล้ว แต่เครื่องนี้ยังไม่มี PowerPoint/LibreOffice สำหรับสร้างภาพสไลด์จริง`;
-    $('textViewer').textContent=text;$('textViewer').classList.remove('hidden');
+    $('textViewer').innerHTML=`<div class="universal-file-preview"><div class="universal-file-icon">📎</div><h3>${escapeHtml(s.name)}</h3><p>แนบไฟล์สำเร็จแล้ว</p><small>ไฟล์ชนิดนี้เก็บไว้ในคลังได้ แต่เบราว์เซอร์อาจไม่มีตัวแสดงตัวอย่างโดยตรง<br>กด “ดูเต็มจอ” เพื่อเปิดไฟล์ต้นฉบับด้วยโปรแกรมที่รองรับในเครื่อง</small></div>`;
+    $('textViewer').classList.remove('hidden');
   }
-  $('readStatus').textContent=pageText()?`พร้อมอ่านหน้า ${state.page+1}`:'หน้านี้ไม่พบข้อความสำหรับอ่าน';
-  renderPresentation();
+  if(kind==='image'){
+    $('readStatus').textContent=pageText()?'OCR พบข้อความบนรูป • พร้อมอ่าน':'แสดงรูปแล้ว • ไม่พบข้อความสำหรับ OCR';
+  }else{
+    $('readStatus').textContent=pageText()?`พร้อมอ่านหน้า ${state.page+1}`:'ไฟล์นี้ไม่มีข้อความสำหรับเสียงอ่าน';
+  }
 }
 function transitionDelay(){return 360}
 function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
@@ -676,7 +527,7 @@ function renderSummary(m){
 }
 
 async function loadLibrary(){
-  const box=$('slideLibrary');box.innerHTML='<div class="card">กำลังโหลด...</div>';try{const r=await fetch('/api/slides');const d=await r.json();if(!d.slides?.length){box.innerHTML='<div class="card">ยังไม่มีสไลด์ในคลัง</div>';return}box.innerHTML=d.slides.map(s=>`<div class="card library-item"><div class="thumb">${s.ext==='.pdf'?'📕':s.ext==='.pptx'?'📊':s.ext.match(/png|jpg|jpeg|webp/)?'🖼️':'📄'}</div><h3>${escapeHtml(s.name)}</h3><p>${formatBytes(s.size)} • ${s.page_count||1} หน้า/สไลด์</p><button data-slide="${s.id}">เปิดในห้องประชุม</button></div>`).join('');box.querySelectorAll('[data-slide]').forEach(b=>b.onclick=()=>openLibrarySlide(b.dataset.slide,d.slides))}catch(e){box.innerHTML='<div class="card">โหลดคลังไม่สำเร็จ</div>'}
+  const box=$('slideLibrary');box.innerHTML='<div class="card">กำลังโหลด...</div>';try{const r=await fetch('/api/slides');const d=await r.json();if(!d.slides?.length){box.innerHTML='<div class="card">ยังไม่มีสไลด์ในคลัง</div>';return}box.innerHTML=d.slides.map(s=>`<div class="card library-item"><div class="thumb">${s.preview_kind==='pdf'?'📕':s.preview_kind==='slides'?'📊':s.preview_kind==='image'?'🖼️':s.preview_kind==='video'?'🎬':s.preview_kind==='audio'?'🎵':s.preview_kind==='text'?'📄':'📎'}</div><h3>${escapeHtml(s.name)}</h3><p>${formatBytes(s.size)}${s.page_count>1?' • '+s.page_count+' หน้า':''}${s.preview_kind==='image'&&s.pages?.[0]?' • OCR':''}</p><button data-slide="${s.id}">เปิดในห้องประชุม</button></div>`).join('');box.querySelectorAll('[data-slide]').forEach(b=>b.onclick=()=>openLibrarySlide(b.dataset.slide,d.slides))}catch(e){box.innerHTML='<div class="card">โหลดคลังไม่สำเร็จ</div>'}
 }
 function openLibrarySlide(id,list){const s=(list||[]).find(x=>x.id===id);if(!s)return;state.slide=s;state.page=0;const d=activeDeck();if(d){d.slide=s;saveDecks();renderDecks()}renderSlide();showView('meeting');toast('เปิดสไลด์จากคลังแล้ว')}
 

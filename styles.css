@@ -787,110 +787,6 @@ body::after{
 @media(max-width:900px){.join-grid{grid-template-columns:1fr}.room-share-box{align-items:flex-start;flex-direction:column}.active-room-head{flex-direction:column}}
 
 
-/* v2.6 — commander profile */
-.commander-card{
-  padding:18px;
-}
-.commander-head{
-  display:flex;
-  gap:12px;
-  align-items:flex-start;
-  margin-bottom:14px;
-}
-.commander-icon{
-  background:linear-gradient(145deg,rgba(255,184,0,.18),rgba(255,123,0,.22));
-  color:#ffd15d;
-  border:1px solid rgba(255,202,83,.24);
-}
-.commander-head h2{
-  margin:0 0 3px;
-}
-.commander-head p{
-  margin:0;
-  color:#f4f8ff;
-  font-weight:700;
-}
-.commander-head small{
-  display:block;
-  color:#9bb6d4;
-  font-size:12px;
-  letter-spacing:.06em;
-}
-.commander-profile{
-  display:grid;
-  grid-template-columns:132px 1fr;
-  gap:16px;
-  align-items:center;
-}
-.commander-photo-wrap{
-  border-radius:16px;
-  overflow:hidden;
-  border:1px solid rgba(255,255,255,.18);
-  background:rgba(255,255,255,.08);
-  box-shadow:0 0 0 1px rgba(79,185,255,.08),0 10px 24px rgba(0,8,24,.34);
-}
-.commander-photo-wrap img{
-  width:100%;
-  aspect-ratio:3/4;
-  object-fit:cover;
-  display:block;
-}
-.commander-profile-text h3{
-  margin:0 0 8px;
-  font-size:28px;
-  line-height:1.18;
-}
-.commander-position{
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:999px;
-  background:rgba(0,129,255,.16);
-  border:1px solid rgba(85,186,255,.28);
-  color:#dff3ff;
-  font-weight:700;
-  margin-bottom:10px;
-}
-.commander-role{
-  color:#f4f8ff;
-  line-height:1.55;
-  font-size:15px;
-}
-
-.commander-setting-card .setting-field{
-  display:block;
-  margin-top:10px;
-  color:#dfeeff;
-  font-size:13px;
-}
-.setting-input{
-  width:100%;
-  margin-top:6px;
-  border:1px solid rgba(66,173,255,.28);
-  border-radius:9px;
-  padding:10px 11px;
-  background:rgba(2,23,50,.88);
-  color:#edf7ff;
-}
-.setting-action-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin-top:10px;
-}
-.commander-card.hidden{
-  display:none !important;
-}
-
-@media(max-width:760px){
-  .commander-profile{
-    grid-template-columns:1fr;
-  }
-  .commander-photo-wrap{
-    max-width:180px;
-  }
-}
-
-
 /* v2.7 — clear voice controls */
 .voice-quality-status{
   margin-top:9px;
@@ -903,91 +799,55 @@ body::after{
 }
 
 
-/* v2.8 — presentation module linked to slide */
-.presentation-card{
-  padding:18px;
-  border-color:rgba(61,193,255,.38);
+
+
+/* v2.9 — universal meeting files + media preview */
+.media-view{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  background:#020d1d;
 }
-.presentation-card.hidden{display:none!important}
-.presentation-head{
+.audio-view{
+  width:calc(100% - 40px);
+  margin:40px 20px;
+}
+.universal-file-preview{
+  min-height:360px;
   display:flex;
-  align-items:flex-start;
-  gap:12px;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:32px;
+  color:#eaf5ff;
+  background:
+    radial-gradient(circle at 50% 35%,rgba(0,129,255,.14),transparent 34%),
+    rgba(3,24,52,.88);
 }
-.presentation-head>div:nth-child(2){flex:1;min-width:0}
-.presentation-head h2{margin:0 0 3px}
-.presentation-head p{
-  margin:0;
-  color:#ddecff;
-  font-weight:700;
-  line-height:1.35;
+.universal-file-preview .universal-file-icon{
+  width:86px;
+  height:86px;
+  border-radius:22px;
+  display:grid;
+  place-items:center;
+  font-size:42px;
+  margin-bottom:14px;
+  background:linear-gradient(145deg,rgba(0,163,255,.22),rgba(0,76,170,.22));
+  border:1px solid rgba(75,191,255,.28);
 }
-.presentation-icon{
-  background:linear-gradient(145deg,rgba(0,190,255,.20),rgba(20,93,214,.24));
-  color:#75dfff;
+.universal-file-preview h3{
+  margin:0 0 8px;
+  max-width:90%;
+  overflow-wrap:anywhere;
 }
-.presentation-state-badge{
-  flex:0 0 auto;
-  padding:6px 9px;
-  border-radius:999px;
-  color:#aee9ff;
-  background:rgba(0,113,185,.20);
-  border:1px solid rgba(74,196,255,.28);
-  font-size:11px;
+.universal-file-preview p{
+  margin:0 0 8px;
+  color:#8ff0b7;
   font-weight:800;
 }
-.presentation-state-badge.live{
-  color:#84f5b7;
-  background:rgba(26,126,83,.24);
-  border-color:rgba(77,232,148,.30);
+.universal-file-preview small{
+  max-width:660px;
+  color:#a6c2df;
+  line-height:1.6;
 }
-.presentation-meeting-meta{
-  display:grid;
-  gap:4px;
-  margin:13px 0;
-  padding:11px 12px;
-  border-radius:11px;
-  background:rgba(2,23,50,.60);
-  border:1px solid rgba(71,178,255,.16);
-}
-.presentation-meeting-meta b{color:#fff}
-.presentation-meeting-meta span{color:#9dbbd9;font-size:12px}
-.presentation-current{
-  padding:12px;
-  border-radius:12px;
-  background:linear-gradient(135deg,rgba(0,91,183,.21),rgba(2,29,61,.72));
-  border:1px solid rgba(67,181,255,.23);
-}
-.presentation-current small,
-.presentation-presenters small{
-  display:block;
-  color:#7fb5dc;
-  margin-bottom:5px;
-}
-.presentation-current strong{
-  display:block;
-  color:#fff;
-  font-size:16px;
-  line-height:1.45;
-}
-.presentation-current div{
-  margin-top:5px;
-  color:#b6d2ea;
-  line-height:1.45;
-  white-space:pre-line;
-}
-.presentation-presenters{
-  margin-top:10px;
-  padding:11px 12px;
-  border-radius:11px;
-  background:rgba(3,29,61,.72);
-  border:1px solid rgba(69,179,255,.18);
-}
-.presentation-presenter-row{
-  padding:5px 0;
-  color:#eaf6ff;
-  border-bottom:1px solid rgba(75,172,255,.10);
-}
-.presentation-presenter-row:last-child{border-bottom:0}
-.presentation-setting-card .setting-field{display:block;margin-top:10px}
-.presentation-setting-card textarea{min-height:84px}

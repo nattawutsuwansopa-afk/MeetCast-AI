@@ -13,7 +13,7 @@
     <nav>
       <button class="nav active" data-view="meeting"><span>🏠</span> ห้องประชุม</button>
       <button class="nav" data-view="join"><span>🔗</span> เข้าร่วมประชุม</button>
-      <button class="nav" data-view="library"><span>📄</span> คลังสไลด์</button>
+      <button class="nav" data-view="library"><span>📄</span> คลังไฟล์</button>
       <button class="nav" data-view="summary"><span>🧾</span> สรุปประชุม</button>
       <button class="nav" data-view="settings"><span>⚙️</span> ตั้งค่า</button>
     </nav>
@@ -51,7 +51,7 @@
           </select>
           <button id="openJoinBtn" class="soft-button">🔗 ห้อง / เข้าร่วม</button>
           <button id="deckManagerBtn" class="soft-button">🗂️ กองสไลด์</button>
-          <button id="attachTopBtn" class="primary large">＋ แนบสไลด์</button>
+          <button id="attachTopBtn" class="primary large">＋ แนบไฟล์ประชุม</button>
         </div>
       </div>
 
@@ -61,8 +61,8 @@
             <div class="slide-title-wrap">
               <div class="section-icon blue-icon">📄</div>
               <div>
-                <h2>สไลด์ประกอบการประชุม</h2>
-                <p id="slideMeta">อัปโหลดและแสดงสไลด์สำหรับการประชุมของคุณ</p>
+                <h2>ไฟล์ประกอบการประชุม</h2>
+                <p id="slideMeta">แนบ PowerPoint, PDF, รูปภาพ, เอกสาร, เสียง, วิดีโอ หรือไฟล์อื่น ๆ สำหรับการประชุม</p>
               </div>
             </div>
             <div class="slide-controls">
@@ -79,16 +79,18 @@
               <div class="doc two">▧</div>
               <div class="plus">＋</div>
             </div>
-            <h3>ลากไฟล์มาวาง หรือกด “แนบสไลด์”</h3>
-            <p>รองรับ PDF, PowerPoint (PPT, PPTX) และรูปภาพ (PNG, JPG, JPEG)<br>ไฟล์จะแสดงบนหน้าจอแบบไม่ดัดแปลง</p>
-            <button id="attachCenterBtn" class="primary upload-button">⇧ เลือกไฟล์สไลด์</button>
-            <input id="fileInput" type="file" hidden accept=".pdf,.ppt,.pptx,.odp,.docx,.xlsx,.txt,.md,.csv,.json,.xml,.html,.png,.jpg,.jpeg,.webp,.bmp">
+            <h3>ลากไฟล์มาวาง หรือกด “แนบไฟล์ประชุม”</h3>
+            <p>รองรับทุกนามสกุลไฟล์ • PowerPoint / PDF / รูป / เอกสาร / เสียง / วิดีโอ<br>รูปภาพจะพยายามอ่านข้อความไทยและอังกฤษเพื่อใช้กับเสียงอ่านอัตโนมัติ</p>
+            <button id="attachCenterBtn" class="primary upload-button">⇧ เลือกไฟล์ประชุม</button>
+            <input id="fileInput" type="file" hidden accept="*/*">
             <span class="drop-hint">หรือ ลากไฟล์มาวางที่นี่</span>
           </div>
 
           <div id="viewerWrap" class="viewer-wrap hidden">
             <iframe id="pdfViewer" class="viewer hidden"></iframe>
-            <img id="imageViewer" class="viewer image-view hidden" alt="slide">
+            <img id="imageViewer" class="viewer image-view hidden" alt="ไฟล์ภาพ">
+            <video id="videoViewer" class="viewer media-view hidden" controls playsinline></video>
+            <audio id="audioViewer" class="audio-view hidden" controls></audio>
             <div id="textViewer" class="viewer text-view hidden"></div>
           </div>
 
@@ -127,59 +129,7 @@
               <span>เมื่อเริ่ม Auto Slide ระบบจะอ่านสไลด์ แล้วเลื่อนไปทางขวาทีละหน้า</span>
             </div>
           </section>
-
-          <section id="commanderCard" class="card commander-card">
-            <div class="commander-head">
-              <div class="section-icon commander-icon">⭐</div>
-              <div>
-                <h2>ผู้บังคับบัญชา</h2>
-                <p id="commanderUnitThView">ศูนย์ค้นหาและช่วยชีวิต</p>
-                <small id="commanderUnitEnView">SEARCH AND RESCUE CENTER</small>
-              </div>
-            </div>
-
-            <div class="commander-profile">
-              <div class="commander-photo-wrap">
-                <img id="commanderPhotoView" src="commander-default.png" alt="ผู้บังคับบัญชา">
-              </div>
-              <div class="commander-profile-text">
-                <h3 id="commanderNameView">พล.อ.ต.อิษฐ์ สงวนศักดิ์</h3>
-                <div id="commanderPositionView" class="commander-position">ผบ.ศศว.ศปอ.</div>
-                <div id="commanderRoleView" class="commander-role">ผู้บังคับบัญชาแจ้งหรือสั่งการในที่ประชุม</div>
-              </div>
-            </div>
-          </section>
-
-          <section id="presentationCard" class="card presentation-card">
-            <div class="presentation-head">
-              <div class="section-icon presentation-icon">📡</div>
-              <div>
-                <h2>นำเสนอ</h2>
-                <p id="presentationMeetingTitleView">ประชุมศูนย์ค้นหาและช่วยชีวิต</p>
-              </div>
-              <span id="presentationStateBadge" class="presentation-state-badge">พร้อมนำเสนอ</span>
-            </div>
-
-            <div class="presentation-meeting-meta">
-              <b id="presentationCommandView">กองบัญชาการควบคุมการปฏิบัติทางอากาศ</b>
-              <span id="presentationRoundView">ครั้งที่ ๒/๖๙</span>
-              <span id="presentationDateTimeView">ในวันพุธที่ ๑๑ มี.ค.๖๙, ๐๙๐๐</span>
-              <span id="presentationLocationView">ณ ห้องประชุม กบค.ศกป.คปอ.</span>
-            </div>
-
-            <div class="presentation-current">
-              <small>เชื่อมโยงกับสไลด์ปัจจุบัน</small>
-              <strong id="presentationCurrentTopic">ศูนย์ค้นหาและช่วยชีวิต</strong>
-              <div id="presentationCurrentDetail">SEARCH AND RESCUE CENTER</div>
-            </div>
-
-            <div id="presentationPresenterBlock" class="presentation-presenters hidden">
-              <small>หน่วย / ผู้รับผิดชอบที่นำเสนอ</small>
-              <div id="presentationPresenterList"></div>
-            </div>
-          </section>
-
-          <section class="card live-meeting-card">
+<section class="card live-meeting-card">
             <div class="live-meeting-title">
               <div class="section-icon radio-icon">◉</div>
               <div>
@@ -271,7 +221,7 @@
     </section>
 
     <section id="view-library" class="view">
-      <div class="page-heading"><div><h1>คลังสไลด์</h1><p>ไฟล์ที่แนบไว้ในเครื่องนี้</p></div><button id="libraryAttachBtn" class="primary large">＋ แนบสไลด์</button></div>
+      <div class="page-heading"><div><h1>คลังไฟล์ประชุม</h1><p>ไฟล์ทุกชนิดที่แนบไว้ในเครื่องนี้</p></div><button id="libraryAttachBtn" class="primary large">＋ แนบไฟล์ประชุม</button></div>
       <div id="slideLibrary" class="library-grid"></div>
     </section>
 
@@ -320,87 +270,7 @@
           <button id="customPresenterBtn" class="setting-action-btn">เลือกรูปหรือวิดีโอนักข่าวจากเครื่อง</button>
           <input id="customPresenterInput" type="file" accept="image/*,video/mp4,video/webm,video/quicktime" hidden>
         </div>
-        <div class="card setting-card commander-setting-card">
-          <h3>ผู้บังคับบัญชา</h3>
-          <p>แก้ไขรายละเอียดตามเอกสารที่แนบ และเปลี่ยนรูปได้จากหมวดตั้งค่า</p>
-
-          <label class="setting-field">หน่วยงาน (TH)
-            <input id="commanderUnitThInput" class="setting-input" maxlength="120" placeholder="เช่น ศูนย์ค้นหาและช่วยชีวิต">
-          </label>
-          <label class="setting-field">หน่วยงาน (EN)
-            <input id="commanderUnitEnInput" class="setting-input" maxlength="120" placeholder="เช่น SEARCH AND RESCUE CENTER">
-          </label>
-          <label class="setting-field">ชื่อผู้บังคับบัญชา
-            <input id="commanderNameInput" class="setting-input" maxlength="120" placeholder="ชื่อ-นามสกุล">
-          </label>
-          <label class="setting-field">ตำแหน่ง
-            <input id="commanderPositionInput" class="setting-input" maxlength="120" placeholder="เช่น ผบ.ศศว.ศปอ.">
-          </label>
-          <label class="setting-field">รายละเอียด / ข้อความกำกับ
-            <textarea id="commanderRoleInput" class="setting-textarea" placeholder="เช่น ผู้บังคับบัญชาแจ้งหรือสั่งการในที่ประชุม"></textarea>
-          </label>
-          <div class="setting-action-row">
-            <button id="changeCommanderPhotoBtn" class="setting-action-btn">เปลี่ยนรูปผู้บังคับบัญชา</button>
-            <button id="resetCommanderBtn" class="setting-action-btn">รีเซ็ตตามไฟล์แนบ</button>
-          </div>
-          <input id="commanderPhotoInput" type="file" accept="image/*" hidden>
-          <label class="toggle-row">
-            <span>แสดงหมวดผู้บังคับบัญชาในหน้าห้องประชุม</span>
-            <label class="toggle"><input id="commanderVisibleToggle" type="checkbox" checked><span></span></label>
-          </label>
-        </div>
-        <div class="card setting-card presentation-setting-card">
-          <h3>นำเสนอ</h3>
-          <p>เปิด/ปิดรายละเอียดการนำเสนอ และแก้ไขข้อมูลจาก PowerPoint ที่แนบได้ ระบบจะเชื่อมโยงหัวข้อกับหน้าสไลด์ปัจจุบันอัตโนมัติ</p>
-
-          <label class="toggle-row">
-            <span>แสดงหมวด “นำเสนอ” ในหน้าห้องประชุม</span>
-            <label class="toggle"><input id="presentationVisibleToggle" type="checkbox" checked><span></span></label>
-          </label>
-          <label class="toggle-row">
-            <span>เชื่อมโยงข้อมูลกับสไลด์อัตโนมัติ</span>
-            <label class="toggle"><input id="presentationSyncToggle" type="checkbox" checked><span></span></label>
-          </label>
-
-          <label class="setting-field">ชื่อการประชุม
-            <input id="presentationTitleInput" class="setting-input" maxlength="160">
-          </label>
-          <label class="setting-field">หน่วย / กองบัญชาการ
-            <input id="presentationCommandInput" class="setting-input" maxlength="160">
-          </label>
-          <label class="setting-field">ครั้งที่
-            <input id="presentationRoundInput" class="setting-input" maxlength="80">
-          </label>
-          <label class="setting-field">วัน / เวลา
-            <input id="presentationDateTimeInput" class="setting-input" maxlength="120">
-          </label>
-          <label class="setting-field">สถานที่
-            <input id="presentationLocationInput" class="setting-input" maxlength="160">
-          </label>
-
-          <label class="setting-field">ระเบียบวาระ 1–4
-            <textarea id="presentationAgenda14Input" class="setting-textarea"></textarea>
-          </label>
-          <label class="setting-field">วาระนำเสนอผลงาน
-            <textarea id="presentationWorkTopicInput" class="setting-textarea"></textarea>
-          </label>
-          <label class="setting-field">หน่วย / ผู้รับผิดชอบที่นำเสนอ (1 บรรทัดต่อ 1 รายการ)
-            <textarea id="presentationPresentersInput" class="setting-textarea"></textarea>
-          </label>
-          <label class="setting-field">ระเบียบวาระ 6–7
-            <textarea id="presentationAgenda67Input" class="setting-textarea"></textarea>
-          </label>
-          <label class="setting-field">เลขสไลด์ที่เป็น “นำเสนอผลงาน”
-            <input id="presentationWorkSlideInput" class="setting-input" type="number" min="1" max="999" value="4">
-          </label>
-
-          <div class="setting-action-row">
-            <button id="previewPresentationBtn" class="setting-action-btn">ดูหมวดนำเสนอ</button>
-            <button id="resetPresentationBtn" class="setting-action-btn">รีเซ็ตตามไฟล์แนบ</button>
-          </div>
-        </div>
-
-        <div class="card setting-card">
+<div class="card setting-card">
           <h3>ข้อความวิ่งบนผู้ประกาศ</h3>
           <p>กำหนดข้อความที่ต้องการให้วิ่งผ่านด้านล่างของผู้ประกาศ</p>
           <textarea id="tickerTextSetting" class="setting-textarea" placeholder="พิมพ์ข้อความวิ่ง...">MeetCast AI • พร้อมสำหรับการประชุมอัจฉริยะ</textarea>
